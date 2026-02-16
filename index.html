@@ -46,12 +46,11 @@
         const uploadedFiles = Array.from(e.target.files);
         setFiles(uploadedFiles);
 
-        const allData = [];
-        for (const file of uploadedFiles) {
-          const text = await file.text();
-          const result = Papa.parse(text, { header: true, skipEmptyLines: true });
-          allData.push(...result.data);
-        }
+        // Parse the single CSV file
+        const file = uploadedFiles[0];
+        const text = await file.text();
+        const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+        const allData = result.data;
 
         const order = detectManipulationOrder(allData);
         setManipulationOrder(order);
@@ -297,10 +296,9 @@
             <div className="flex gap-4 items-center flex-wrap">
               <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors">
                 <Upload size={20} />
-                <span>Upload CSV Files</span>
+                <span>Upload CSV File</span>
                 <input
                   type="file"
-                  multiple
                   accept=".csv"
                   onChange={handleFileUpload}
                   className="hidden"
@@ -309,7 +307,7 @@
 
               {files.length > 0 && (
                 <span className="text-sm text-gray-600">
-                  {files.length} file{files.length > 1 ? 's' : ''} loaded
+                  {files[0].name} loaded
                 </span>
               )}
 
@@ -342,7 +340,7 @@
                 <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                   <div className="text-center">
                     <Upload size={48} />
-                    <p className="mt-2">Upload CSV files to visualize the tree structure</p>
+                    <p className="mt-2">Upload CSV file to visualize the tree structure</p>
                     <p className="mt-1 text-sm">The tool will automatically detect scenarios and manipulation order</p>
                   </div>
                 </div>
