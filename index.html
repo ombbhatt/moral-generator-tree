@@ -113,16 +113,32 @@
         return 'unknown';
       };
 
+      const getShorthandId = (variantsPath) => {
+        const parts = variantsPath.split(',').map(p => p.trim());
+        if (parts.length === 1 && parts[0] === 'base') return 'b-';
+        
+        let id = 'b-';
+        for (let i = 1; i < parts.length; i++) {
+          const variant = parts[i];
+          const element = manipulationOrder[i - 1];
+          if (!element) continue;
+          
+          const initial = element[0]; // First letter: c, i, u, or p
+          const value = variant.includes('high-') ? '1' : '0';
+          id += `${initial}${value}`;
+        }
+        return id;
+      };
+
       const buildMultipleTrees = (data) => {
-        // Find first-level manipulation rows to determine number of scenarios
-        const firstLevelRows = data.filter(d => {
+        // Count base rows to determine number of scenarios
+        const baseRows = data.filter(d => {
           if (!d.variants) return false;
-          const parts = d.variants.split(',').map(p => p.trim());
-          return parts.length === 2; // base + one manipulation
+          return d.variants.trim() === 'base';
         });
 
-        const numScenarios = firstLevelRows.length / 2; // 2 rows per scenario (high and low)
-        console.log(`Detected ${numScenarios} scenarios`);
+        const numScenarios = baseRows.length;
+        console.log(`Detected ${numScenarios} scenarios (from ${baseRows.length} base rows)`);
 
         // Split data into scenarios
         const scenarios = [];
@@ -171,8 +187,8 @@
         const baseEntry = data.find(d => d.variants === 'base');
         if (baseEntry) {
           root.text = baseEntry.text;
-          root.option1 = baseEntry['options.1'] || baseEntry['options/.1'] || baseEntry['options\\.1'] || '';
-          root.option2 = baseEntry['options.2'] || baseEntry['options/.2'] || baseEntry['options\\.2'] || '';
+          root.option1 = baseEntry['options\\.1'] || baseEntry['options.1'] || baseEntry['options/.1'] || '';
+          root.option2 = baseEntry['options\\.2'] || baseEntry['options.2'] || baseEntry['options/.2'] || '';
         }
 
         const nodeMap = { 'base': root };
@@ -198,8 +214,8 @@
               name: currentVariant,
               variants: variants,
               text: row.text || '',
-              option1: row['options.1'] || row['options/.1'] || row['options\\.1'] || '',
-              option2: row['options.2'] || row['options/.2'] || row['options\\.2'] || '',
+              option1: row['options\\.1'] || row['options.1'] || row['options/.1'] || '',
+              option2: row['options\\.2'] || row['options.2'] || row['options/.2'] || '',
               children: [],
               scenarioIndex
             };
@@ -286,6 +302,15 @@
           .attr('fill', '#1e293b')
           .attr('font-weight', '500')
           .text(d => d.data.name);
+
+        // Add shorthand ID below the node
+        node.append('text')
+          .attr('dy', 20)
+          .attr('text-anchor', 'middle')
+          .attr('font-size', '10px')
+          .attr('fill', '#64748b')
+          .attr('font-weight', '600')
+          .text(d => getShorthandId(d.data.variants));
       };
 
       return (
